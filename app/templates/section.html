@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ section.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="/" class="back-link">← Все разделы</a>
+        <h1>{{ section.title }}</h1>
+    </div>
+    <button class="btn" onclick="document.getElementById('add-card-modal').style.display='flex'">+ Добавить карточку</button>
+</div>
+
+{% if section.cards %}
+<div class="cards-grid">
+    {% for card in section.cards %}
+    <div class="card">
+        <div class="card__body">
+            <h3>{{ card.title }}</h3>
+            {% if card.description %}
+            <p>{{ card.description }}</p>
+            {% endif %}
+            {% if card.link %}
+            <a href="{{ card.link }}" class="card__link" target="_blank">Перейти →</a>
+            {% endif %}
+        </div>
+        <div class="card__footer">
+            <form method="post" action="/cards/{{ card.id }}/delete" onsubmit="return confirm('Удалить карточку?')">
+                <input type="hidden" name="section_id" value="{{ section.id }}">
+                <button type="submit" class="btn btn--danger btn--sm">Удалить</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>В этом разделе пока нет карточек.</p>
+</div>
+{% endif %}
+
+<!-- Модалка добавления карточки -->
+<div class="modal" id="add-card-modal">
+    <div class="modal__content">
+        <h2>Новая карточка</h2>
+        <form method="post" action="/cards/create">
+            <input type="hidden" name="section_id" value="{{ section.id }}">
+            <label>Название
+                <input type="text" name="title" required placeholder="Название карточки">
+            </label>
+            <label>Описание
+                <textarea name="description" rows="3" placeholder="Краткое описание"></textarea>
+            </label>
+            <label>Ссылка
+                <input type="url" name="link" placeholder="https://...">
+            </label>
+            <div class="modal__actions">
+                <button type="submit" class="btn">Создать</button>
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('add-card-modal').style.display='none'">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

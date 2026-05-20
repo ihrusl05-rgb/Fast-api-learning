@@ -1,0 +1,215 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f6fa;
+    color: #2d3436;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+header {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px 0;
+    margin-bottom: 32px;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #6c5ce7;
+    text-decoration: none;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+}
+
+.page-header h1 { font-size: 1.8rem; margin-top: 4px; }
+
+.back-link {
+    font-size: 0.85rem;
+    color: #636e72;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 4px;
+}
+.back-link:hover { color: #6c5ce7; }
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 8px 18px;
+    background: #6c5ce7;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.btn:hover { background: #5a4bd1; }
+.btn--secondary { background: #dfe6e9; color: #2d3436; }
+.btn--secondary:hover { background: #b2bec3; }
+.btn--danger { background: #d63031; }
+.btn--danger:hover { background: #b71c1c; }
+.btn--sm { padding: 5px 12px; font-size: 0.8rem; }
+
+/* Sections grid */
+.sections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.section-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.section-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-card__header h2 { font-size: 1.1rem; }
+.section-card__header h2 a { color: #2d3436; text-decoration: none; }
+.section-card__header h2 a:hover { color: #6c5ce7; }
+
+.badge {
+    background: #f0eeff;
+    color: #6c5ce7;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.section-card__cards { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mini-card {
+    background: #f5f6fa;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    color: #636e72;
+}
+.mini-card--more { color: #6c5ce7; background: #f0eeff; }
+
+.section-card__footer {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+/* Cards grid */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+.card:hover { box-shadow: 0 4px 16px rgba(108,92,231,0.15); }
+
+.card__body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.card__body h3 { font-size: 1rem; }
+.card__body p { font-size: 0.88rem; color: #636e72; line-height: 1.5; }
+
+.card__link {
+    font-size: 0.85rem;
+    color: #6c5ce7;
+    text-decoration: none;
+    margin-top: auto;
+}
+.card__link:hover { text-decoration: underline; }
+
+.card__footer {
+    padding: 12px 20px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #b2bec3;
+    font-size: 1rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal__content {
+    background: #fff;
+    border-radius: 14px;
+    padding: 32px;
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modal__content h2 { font-size: 1.2rem; }
+
+.modal__content label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.88rem;
+    color: #636e72;
+}
+
+.modal__content input,
+.modal__content textarea {
+    padding: 9px 12px;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.modal__content input:focus,
+.modal__content textarea:focus { border-color: #6c5ce7; }
+
+.modal__actions { display: flex; gap: 10px; }

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Разделы{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Разделы</h1>
+    <button class="btn" onclick="document.getElementById('add-section-modal').style.display='flex'">+ Добавить раздел</button>
+</div>
+
+{% if sections %}
+<div class="sections-grid">
+    {% for section in sections %}
+    <div class="section-card">
+        <div class="section-card__header">
+            <h2><a href="/sections/{{ section.id }}">{{ section.title }}</a></h2>
+            <span class="badge">{{ section.cards | length }} карточек</span>
+        </div>
+        <div class="section-card__cards">
+            {% for card in section.cards[:3] %}
+            <div class="mini-card">{{ card.title }}</div>
+            {% endfor %}
+            {% if section.cards | length > 3 %}
+            <div class="mini-card mini-card--more">+{{ section.cards | length - 3 }} ещё</div>
+            {% endif %}
+        </div>
+        <div class="section-card__footer">
+            <a href="/sections/{{ section.id }}" class="btn btn--secondary">Открыть</a>
+            <form method="post" action="/sections/{{ section.id }}/delete" onsubmit="return confirm('Удалить раздел?')">
+                <button type="submit" class="btn btn--danger">Удалить</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>Разделов пока нет. Создайте первый!</p>
+</div>
+{% endif %}
+
+<!-- Модалка добавления раздела -->
+<div class="modal" id="add-section-modal">
+    <div class="modal__content">
+        <h2>Новый раздел</h2>
+        <form method="post" action="/sections/create">
+            <label>Название
+                <input type="text" name="title" required placeholder="Например: Продажи">
+            </label>
+            <label>Slug
+                <input type="text" name="slug" required placeholder="Например: sales">
+            </label>
+            <div class="modal__actions">
+                <button type="submit" class="btn">Создать</button>
+                <button type="button" class="btn btn--secondary" onclick="document.getElementById('add-section-modal').style.display='none'">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
