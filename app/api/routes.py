@@ -27,13 +27,7 @@ async def login_post(
     username: str = Form(...),
     password: str = Form(...),
 ):
-    if not username or not password:
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "message": "Username и password обязательны"},
-            status_code=400,
-        )
-
+    
     return templates.TemplateResponse(
         "login.html",
         {
