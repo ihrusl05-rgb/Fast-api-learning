@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
-
+from starlette.middleware.sessions import SessionMiddleware
 from app.database.database import create_tables
 from app.models import models
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.api.routes import router
+
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,3 +18,4 @@ app = FastAPI(title="Partner System", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(router)
 
+app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
