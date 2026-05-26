@@ -1,21 +1,20 @@
-from contextlib import asynccontextmanager
 from starlette.middleware.sessions import SessionMiddleware
-from app.database.database import create_tables
-from app.models import models
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+
 from app.api.routes import router
+from config import settings
 
-
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await create_tables()
-    yield
-app = FastAPI(title="Partner System", lifespan=lifespan)
+app = FastAPI(title=settings.APP_TITLE)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(router)
 
-app.add_middleware(SessionMiddleware, secret_key="your-secret-key")
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    session_cookie=settings.SESSION_COOKIE_NAME,
+    max_age=settings.SESSION_MAX_AGE,
+    same_site=settings.SESSION_SAME_SITE,
+    https_only=settings.SESSION_HTTPS_ONLY,
+)

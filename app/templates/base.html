@@ -7,13 +7,39 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <a href="/" class="logo">Партнёрская система</a>
-        </div>
-    </header>
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="page-shell">
+        <header class="site-header">
+            <div class="container site-header__inner">
+                <a href="/" class="logo">
+                    <span class="logo__mark">PS</span>
+                    <span>
+                        <strong>Partner System</strong>
+                        <small>Витрина партнёрских офферов</small>
+                    </span>
+                </a>
+                <nav class="site-nav">
+                    {% if request.session.get("username") %}
+                    <a href="/">Дашборд</a>
+                    <a href="/sales">Офферы</a>
+                    <a href="/logout" class="site-nav__button">Выход</a>
+                    {% else %}
+                    <a href="/login">Вход</a>
+                    <a href="/registration" class="site-nav__button">Регистрация</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </header>
+
+        <main class="container page-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="site-footer">
+            <div class="container site-footer__inner">
+                <p>FastAPI, SQLAlchemy Async, Alembic, Jinja2</p>
+                <p>Демо-проект для партнёрской программы и каталога офферов</p>
+            </div>
+        </footer>
+    </div>
 </body>
 </html>

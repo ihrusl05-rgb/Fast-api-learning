@@ -1,37 +1,22 @@
-from decimal import Decimal
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class UserCreate(BaseModel):
-    email: str
-    username: str
-    password: str
+    email: EmailStr
+    username: str = Field(min_length=3, max_length=30)
+    password: str = Field(min_length=6, max_length=100)
 
-class UserOut(BaseModel):
-    id: int
-    email: str
-    username: str
-    is_active: bool = True
-    image: str | None = None
-    model_config = ConfigDict(from_attributes=True)
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> EmailStr:
+        return value.lower()
 
+    @field_validator("username")
+    @classmethod
+    def normalize_username(cls, value: str) -> str:
+        return value.strip()
 
-class CategoryOut(BaseModel):
-    id: int
-    name: str
-    description: str | None = None
-    is_active: bool = True
-    icon: str = "📦"
-    slug: str
-    model_config = ConfigDict(from_attributes=True)
-
-class ProductOut(BaseModel):
-    id: int
-    category_id: int
-    name: str
-    description: str | None = None
-    price: Decimal
-    is_active: bool = True
-    image: str | None = None
-    slug: str
-    model_config = ConfigDict(from_attributes=True)
+    @field_validator("password")
+    @classmethod
+    def normalize_password(cls, value: str) -> str:
+        return value.strip()

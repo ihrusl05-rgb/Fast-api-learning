@@ -1,9 +1,17 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "sqlite+aiosqlite:///tasks.db"
+    APP_TITLE: str = "Partner System"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
+    SECRET_KEY: str = "dev-secret-key-change-me"
+    SESSION_COOKIE_NAME: str = "partner_session"
+    SESSION_MAX_AGE: int = 60 * 60 * 8
+    SESSION_SAME_SITE: str = "lax"
+    SESSION_HTTPS_ONLY: bool = False
+    SQL_ECHO: bool = False
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
+
 
 settings = Settings()

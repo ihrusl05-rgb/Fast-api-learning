@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="/sales" class="back-link">← Назад к каталогу</a>
+        <span class="panel__eyebrow">Карточка предложения</span>
+        <h1>{{ product.name }}</h1>
+    </div>
+    <span class="badge badge--price">{{ product.price }} ₽</span>
+</div>
+
+<section class="detail-layout">
+    <article class="panel detail-card">
+        <div class="detail-card__hero">
+            <div class="detail-card__icon">{{ product.category.icon }}</div>
+            <div>
+                <p class="detail-card__category">{{ product.category.name }}</p>
+                <h2>{{ product.name }}</h2>
+            </div>
+        </div>
+
+        <p class="detail-card__description">
+            {{ product.description or "Описание пока не добавлено." }}
+        </p>
+
+        <dl class="detail-meta">
+            <div>
+                <dt>ID</dt>
+                <dd>{{ product.id }}</dd>
+            </div>
+            <div>
+                <dt>Slug</dt>
+                <dd>{{ product.slug }}</dd>
+            </div>
+            <div>
+                <dt>Категория</dt>
+                <dd>{{ product.category.name }}</dd>
+            </div>
+            <div>
+                <dt>Статус</dt>
+                <dd>Активен</dd>
+            </div>
+        </dl>
+    </article>
+
+    <aside class="panel detail-side">
+        <div class="panel__header">
+            <div>
+                <span class="panel__eyebrow">Похожие офферы</span>
+                <h2>Из той же категории</h2>
+            </div>
+        </div>
+
+        {% if related_products %}
+        <div class="offer-preview-list">
+            {% for related in related_products %}
+            <a href="/sales/{{ related.slug }}" class="offer-preview">
+                <div class="offer-preview__meta">
+                    <span>#{{ related.id }}</span>
+                    <span>{{ related.price }} ₽</span>
+                </div>
+                <strong>{{ related.name }}</strong>
+                <p>{{ related.description or "Описание пока не добавлено." }}</p>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted-text">Других офферов в этой категории пока нет.</p>
+        {% endif %}
+    </aside>
+</section>
+{% endblock %}

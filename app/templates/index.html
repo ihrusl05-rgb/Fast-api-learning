@@ -1,59 +1,72 @@
 {% extends "base.html" %}
-{% block title %}Разделы{% endblock %}
+{% block title %}Дашборд{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Разделы</h1>
-    <button class="btn" onclick="document.getElementById('add-section-modal').style.display='flex'">+ Добавить раздел</button>
-</div>
-
-{% if sections %}
-<div class="sections-grid">
-    {% for section in sections %}
-    <div class="section-card">
-        <div class="section-card__header">
-            <h2><a href="/sections/{{ section.id }}">{{ section.title }}</a></h2>
-            <span class="badge">{{ section.cards | length }} карточек</span>
-        </div>
-        <div class="section-card__cards">
-            {% for card in section.cards[:3] %}
-            <div class="mini-card">{{ card.title }}</div>
-            {% endfor %}
-            {% if section.cards | length > 3 %}
-            <div class="mini-card mini-card--more">+{{ section.cards | length - 3 }} ещё</div>
-            {% endif %}
-        </div>
-        <div class="section-card__footer">
-            <a href="/sections/{{ section.id }}" class="btn btn--secondary">Открыть</a>
-            <form method="post" action="/sections/{{ section.id }}/delete" onsubmit="return confirm('Удалить раздел?')">
-                <button type="submit" class="btn btn--danger">Удалить</button>
-            </form>
+<section class="hero">
+    <div class="hero__content">
+        <span class="hero__eyebrow">Дашборд партнёрской системы</span>
+        <h1>{{ username }}, у тебя под рукой каталог офферов и быстрый доступ к витрине.</h1>
+        <p class="hero__text">
+            Этот экран показывает, как можно организовать личный кабинет пользователя:
+            базовая аналитика, категории партнёров и быстрый переход к предложениям.
+        </p>
+        <div class="hero__actions">
+            <a href="/sales" class="btn">Перейти к офферам</a>
+            <a href="/logout" class="btn btn--ghost">Завершить сессию</a>
         </div>
     </div>
-    {% endfor %}
-</div>
-{% else %}
-<div class="empty-state">
-    <p>Разделов пока нет. Создайте первый!</p>
-</div>
-{% endif %}
+    <div class="hero__panel">
+        <div class="hero-stat">
+            <span>Активных категорий</span>
+            <strong>{{ stats.categories }}</strong>
+        </div>
+        <div class="hero-stat">
+            <span>Активных офферов</span>
+            <strong>{{ stats.offers }}</strong>
+        </div>
+    </div>
+</section>
 
-<!-- Модалка добавления раздела -->
-<div class="modal" id="add-section-modal">
-    <div class="modal__content">
-        <h2>Новый раздел</h2>
-        <form method="post" action="/sections/create">
-            <label>Название
-                <input type="text" name="title" required placeholder="Например: Продажи">
-            </label>
-            <label>Slug
-                <input type="text" name="slug" required placeholder="Например: sales">
-            </label>
-            <div class="modal__actions">
-                <button type="submit" class="btn">Создать</button>
-                <button type="button" class="btn btn--secondary" onclick="document.getElementById('add-section-modal').style.display='none'">Отмена</button>
+<section class="dashboard-grid">
+    <article class="panel">
+        <div class="panel__header">
+            <div>
+                <span class="panel__eyebrow">Категории</span>
+                <h2>Основные направления партнёров</h2>
             </div>
-        </form>
-    </div>
-</div>
+        </div>
+        <div class="chip-list">
+            {% for category in featured_categories %}
+            <div class="chip-card">
+                <span class="chip-card__icon">{{ category.icon }}</span>
+                <div>
+                    <strong>{{ category.name }}</strong>
+                    <p>{{ category.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel__header">
+            <div>
+                <span class="panel__eyebrow">Витрина</span>
+                <h2>Свежие предложения</h2>
+            </div>
+        </div>
+        <div class="offer-preview-list">
+            {% for product in featured_offers %}
+            <a href="/sales/{{ product.slug }}" class="offer-preview">
+                <div class="offer-preview__meta">
+                    <span>{{ product.category.icon }} {{ product.category.name }}</span>
+                    <span>{{ product.price }} ₽</span>
+                </div>
+                <strong>{{ product.name }}</strong>
+                <p>{{ product.description or "Описание пока не добавлено." }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </article>
+</section>
 {% endblock %}

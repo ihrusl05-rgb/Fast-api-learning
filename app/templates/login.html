@@ -1,23 +1,49 @@
 {% extends "base.html" %}
+{% block title %}Вход{% endblock %}
 
 {% block content %}
-<h1>Login</h1>
-
-{% if message %}
-<p>{{ message }}</p>
-{% endif %}
-
-<form action="/login" method="post">
-    <div>
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required>
+<section class="auth-layout">
+    <div class="auth-copy">
+        <span class="hero__eyebrow">Вход в систему</span>
+        <h1>Личный кабинет партнёрской витрины.</h1>
+        <p>
+            После авторизации пользователь получает доступ к каталогу предложений,
+            фильтрации по категориям и просмотру карточек офферов.
+        </p>
     </div>
 
-    <div>
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required>
-    </div>
+    <div class="auth-card">
+        <h2>Войти</h2>
+        <p class="auth-card__subtitle">Используй логин и пароль, созданные при регистрации.</p>
 
-    <button type="submit">Login</button>
-</form>
+        {% if message %}
+        <div class="alert alert--error">{{ message }}</div>
+        {% endif %}
+
+        <form action="/login" method="post" class="form-stack">
+            <label>
+                Username
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value="{{ form_data.username if form_data else '' }}"
+                    required
+                >
+            </label>
+
+            <label>
+                Password
+                <input type="password" id="password" name="password" required>
+            </label>
+
+            <button type="submit" class="btn btn--block">Войти</button>
+        </form>
+
+        <p class="auth-card__hint">
+            Нет аккаунта?
+            <a href="/registration">Создать учётную запись</a>
+        </p>
+    </div>
+</section>
 {% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Офферы{% endblock %}
+
+{% block content %}
+<div class="page-header sales-header">
+    <div>
+        <span class="panel__eyebrow">Каталог предложений</span>
+        <h1>Витрина партнёрских офферов</h1>
+        <p class="sales-subtitle">
+            Поиск по названию, описанию и id. Пагинация и фильтрация работают на сервере.
+        </p>
+    </div>
+    <a href="/" class="btn btn--ghost">Вернуться в дашборд</a>
+</div>
+
+<form class="sales-search" method="get">
+    {% if selected_category_id %}
+    <input type="hidden" name="category_id" value="{{ selected_category_id }}">
+    {% endif %}
+    <input
+        type="search"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="Например: роллы, маникюр или 3"
+    >
+    <button type="submit" class="btn">Найти</button>
+</form>
+
+<div class="sales-layout">
+    <aside class="sales-sidebar">
+        <div class="panel panel--sidebar">
+            <h2>Категории</h2>
+            <div class="sales-categories">
+                <a href="/sales{% if search_query %}?q={{ search_query }}{% endif %}" class="sales-category{% if not selected_category_id %} is-active{% endif %}">
+                    Все предложения
+                </a>
+                {% for category in categories %}
+                <a
+                    href="/sales?category_id={{ category.id }}{% if search_query %}&q={{ search_query }}{% endif %}"
+                    class="sales-category{% if selected_category_id == category.id %} is-active{% endif %}"
+                >
+                    <span>{{ category.icon }}</span>
+                    <span>{{ category.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <section class="sales-content">
+        <div class="panel sales-summary">
+            <div>
+                <span class="panel__eyebrow">Результат</span>
+                <h2>Найдено {{ total_products }} офферов</h2>
+            </div>
+            <div class="sales-summary__meta">
+                {% if search_query %}
+                <span>Запрос: {{ search_query }}</span>
+                {% endif %}
+                <span>Страница {{ page }} из {{ total_pages }}</span>
+            </div>
+        </div>
+
+        {% if sections %}
+        <div class="sales-sections">
+            {% for section in sections %}
+            <section class="panel sales-section">
+                <div class="sales-section__header">
+                    <div>
+                        <span class="sales-section__icon">{{ section.category.icon }}</span>
+                        <div>
+                            <h2>{{ section.category.name }}</h2>
+                            {% if section.category.description %}
+                            <p class="sales-section__description">{{ section.category.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="badge">{{ section.products|length }} шт.</span>
+                </div>
+
+                <div class="sales-grid">
+                    {% for product in section.products %}
+                    <article class="sales-card">
+                        <div class="sales-card__placeholder">{{ product.name[0]|upper }}</div>
+                        <div class="sales-card__meta">
+                            <span>#{{ product.id }}</span>
+                            <span>{{ product.price }} ₽</span>
+                        </div>
+                        <h3>{{ product.name }}</h3>
+                        <p>{{ product.description or "Описание пока не добавлено." }}</p>
+                        <a href="/sales/{{ product.slug }}" class="card-link">Подробнее</a>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="panel empty-state">
+            <p>По текущему фильтру товаров не найдено.</p>
+        </div>
+        {% endif %}
+
+        {% if total_pages > 1 %}
+        <nav class="sales-pagination" aria-label="Пагинация">
+            {% if has_previous %}
+            <a class="btn btn--ghost" href="/sales?page={{ page - 1 }}{% if selected_category_id %}&category_id={{ selected_category_id }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                Назад
+            </a>
+            {% endif %}
+
+            <span class="sales-page-indicator">Страница {{ page }} из {{ total_pages }}</span>
+
+            {% if has_next %}
+            <a class="btn btn--ghost" href="/sales?page={{ page + 1 }}{% if selected_category_id %}&category_id={{ selected_category_id }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                Вперёд
+            </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
