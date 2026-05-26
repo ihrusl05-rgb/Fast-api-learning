@@ -1,72 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Дашборд{% endblock %}
+{% block title %}Главная{% endblock %}
 
 {% block content %}
-<section class="hero">
+<div class="hero">
     <div class="hero__content">
-        <span class="hero__eyebrow">Дашборд партнёрской системы</span>
-        <h1>{{ username }}, у тебя под рукой каталог офферов и быстрый доступ к витрине.</h1>
-        <p class="hero__text">
-            Этот экран показывает, как можно организовать личный кабинет пользователя:
-            базовая аналитика, категории партнёров и быстрый переход к предложениям.
-        </p>
+        <span class="hero__eyebrow">Партнерская система</span>
+        <h1>Привет, {{ username }}.</h1>
         <div class="hero__actions">
-            <a href="/sales" class="btn">Перейти к офферам</a>
-            <a href="/logout" class="btn btn--ghost">Завершить сессию</a>
+            <a href="/sales" class="btn">Открыть предложения</a>
+            <a href="/logout" class="btn btn--secondary">Выйти</a>
         </div>
     </div>
-    <div class="hero__panel">
-        <div class="hero-stat">
-            <span>Активных категорий</span>
-            <strong>{{ stats.categories }}</strong>
-        </div>
-        <div class="hero-stat">
-            <span>Активных офферов</span>
-            <strong>{{ stats.offers }}</strong>
-        </div>
-    </div>
-</section>
-
-<section class="dashboard-grid">
-    <article class="panel">
-        <div class="panel__header">
-            <div>
-                <span class="panel__eyebrow">Категории</span>
-                <h2>Основные направления партнёров</h2>
-            </div>
-        </div>
-        <div class="chip-list">
-            {% for category in featured_categories %}
-            <div class="chip-card">
-                <span class="chip-card__icon">{{ category.icon }}</span>
-                <div>
-                    <strong>{{ category.name }}</strong>
-                    <p>{{ category.description }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </article>
-
-    <article class="panel">
-        <div class="panel__header">
-            <div>
-                <span class="panel__eyebrow">Витрина</span>
-                <h2>Свежие предложения</h2>
-            </div>
-        </div>
-        <div class="offer-preview-list">
-            {% for product in featured_offers %}
-            <a href="/sales/{{ product.slug }}" class="offer-preview">
-                <div class="offer-preview__meta">
-                    <span>{{ product.category.icon }} {{ product.category.name }}</span>
-                    <span>{{ product.price }} ₽</span>
-                </div>
-                <strong>{{ product.name }}</strong>
-                <p>{{ product.description or "Описание пока не добавлено." }}</p>
-            </a>
-            {% endfor %}
-        </div>
-    </article>
-</section>
+</div>
 {% endblock %}
