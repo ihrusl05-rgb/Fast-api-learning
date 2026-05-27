@@ -89,7 +89,7 @@ uvicorn main:app --reload
 Пример в `.env.example`:
 
 ```env
-DATABASE_URL=sqlite+aiosqlite:///./test.db
+DATABASE_URL=spostgresql+asyncpg://user:password@localhost:5432/partner_db
 SECRET_KEY=change-me
 SESSION_COOKIE_NAME=partner_session
 SESSION_MAX_AGE=28800
