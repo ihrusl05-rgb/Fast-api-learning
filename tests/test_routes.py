@@ -32,6 +32,7 @@ class StubSession:
         self.scalar_results = list(scalar_results or [])
         self.added = []
         self.committed = False
+        self.rolled_back = False
 
     async def execute(self, _query):
         if self.execute_results:
@@ -48,6 +49,9 @@ class StubSession:
 
     async def commit(self):
         self.committed = True
+
+    async def rollback(self):
+        self.rolled_back = True
 
 
 class StubUser:
@@ -73,6 +77,13 @@ async def test_login_page_opens(client):
 
 async def test_sales_redirects_if_user_not_logged_in(client):
     response = await client.get("/sales", follow_redirects=False)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+
+async def test_admin_redirects_if_user_not_logged_in(client):
+    response = await client.get("/admin", follow_redirects=False)
 
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
@@ -199,3 +210,41 @@ async def test_logout_redirects_user(client):
 
     assert response.status_code == 303
     assert response.headers["location"] == "/"
+
+
+async def test_admin_category_create_redirects_and_saves_category(client, override_db):
+    user = StubUser(
+        username="admin_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "admin_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    session = StubSession(execute_results=[StubResult(value=user)])
+    override_db(session)
+
+    response = await client.post(
+        "/admin/categories/new",
+        data={
+            "name": "Еда",
+            "description": "Скидки и промо",
+            "icon": "🍔",
+            "slug": "food",
+            "is_active": "on",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/admin"
+    assert session.committed is True
+    assert len(session.added) == 1
+    assert session.added[0].slug == "food"
+    assert session.added[0].is_active is True

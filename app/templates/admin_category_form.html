@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="/admin" class="back-link">← Назад в админку</a>
+        <span class="panel__eyebrow">Разделы</span>
+        <h1>{{ page_title }}</h1>
+    </div>
+</div>
+
+<section class="panel admin-form-panel">
+    {% if message %}
+    <div class="alert alert--error">{{ message }}</div>
+    {% endif %}
+
+    <form action="{{ form_action }}" method="post" class="form-stack">
+        <div class="form-grid">
+            <label>
+                Название
+                <input type="text" name="name" value="{{ form_data.name }}" required>
+            </label>
+
+            <label>
+                Slug
+                <input type="text" name="slug" value="{{ form_data.slug }}" placeholder="food-delivery" required>
+            </label>
+        </div>
+
+        <div class="form-grid">
+            <label>
+                Иконка
+                <input type="text" name="icon" value="{{ form_data.icon }}" placeholder="🍔" required>
+            </label>
+
+            <label class="checkbox-field">
+                <input type="checkbox" name="is_active" {% if form_data.is_active %}checked{% endif %}>
+                <span>Раздел активен и виден в витрине</span>
+            </label>
+        </div>
+
+        <label>
+            Описание
+            <textarea name="description" rows="5" placeholder="Краткое описание раздела">{{ form_data.description }}</textarea>
+        </label>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">{{ submit_label }}</button>
+            <a href="/admin" class="btn btn--ghost">Отмена</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

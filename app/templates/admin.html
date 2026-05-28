@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Админка{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="panel__eyebrow">Админка партнёров</span>
+        <h1>Управление разделами и карточками</h1>
+        <p class="sales-subtitle">
+            Здесь можно создавать и редактировать разделы и офферы. Эти изменения позже
+            будут источником событий для WAL и Kafka.
+        </p>
+    </div>
+    <div class="hero__actions">
+        <a href="/admin/categories/new" class="btn">+ Раздел</a>
+        <a href="/admin/products/new" class="btn btn--ghost">+ Карточка</a>
+    </div>
+</div>
+
+<div class="admin-layout">
+    <section class="panel admin-panel">
+        <div class="panel__header admin-panel__header">
+            <div>
+                <span class="panel__eyebrow">Разделы</span>
+                <h2>{{ categories|length }} всего</h2>
+            </div>
+            <a href="/admin/categories/new" class="btn btn--ghost">Создать раздел</a>
+        </div>
+
+        {% if categories %}
+        <div class="admin-list">
+            {% for category in categories %}
+            <article class="admin-item">
+                <div class="admin-item__main">
+                    <div class="admin-item__title">
+                        <span class="sales-section__icon">{{ category.icon }}</span>
+                        <div>
+                            <h3>{{ category.name }}</h3>
+                            <p>{{ category.description or "Описание пока не добавлено." }}</p>
+                        </div>
+                    </div>
+                    <div class="admin-item__meta">
+                        <span class="badge">slug: {{ category.slug }}</span>
+                        <span class="badge">{{ category.products|length }} карточек</span>
+                        <span class="badge {% if category.is_active %}badge--success{% else %}badge--muted{% endif %}">
+                            {% if category.is_active %}Активен{% else %}Скрыт{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <a href="/admin/categories/{{ category.id }}/edit" class="btn btn--ghost">Редактировать</a>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Разделов пока нет. Начните с создания первого раздела.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="panel admin-panel">
+        <div class="panel__header admin-panel__header">
+            <div>
+                <span class="panel__eyebrow">Карточки</span>
+                <h2>{{ products|length }} всего</h2>
+            </div>
+            <a href="/admin/products/new" class="btn btn--ghost">Создать карточку</a>
+        </div>
+
+        {% if products %}
+        <div class="admin-list">
+            {% for product in products %}
+            <article class="admin-item">
+                <div class="admin-item__main">
+                    <div class="admin-item__title">
+                        <div>
+                            <h3>{{ product.name }}</h3>
+                            <p>{{ product.description or "Описание пока не добавлено." }}</p>
+                        </div>
+                    </div>
+                    <div class="admin-item__meta">
+                        <span class="badge">#{{ product.id }}</span>
+                        <span class="badge">{{ product.category.name }}</span>
+                        <span class="badge">{{ product.price }} ₽</span>
+                        <span class="badge">slug: {{ product.slug }}</span>
+                        <span class="badge {% if product.is_active %}badge--success{% else %}badge--muted{% endif %}">
+                            {% if product.is_active %}Активен{% else %}Скрыт{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <a href="/admin/products/{{ product.id }}/edit" class="btn btn--ghost">Редактировать</a>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Карточек пока нет. Создайте первую карточку после добавления раздела.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
