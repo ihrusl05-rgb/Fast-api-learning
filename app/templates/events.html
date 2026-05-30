@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}События{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <span class="panel__eyebrow">Kafka consumer</span>
+        <h1>Лента событий изменений</h1>
+        <p class="sales-subtitle">
+            Здесь показаны последние события, которые consumer прочитал из Kafka topic
+            <strong>partner_changes</strong> и сохранил в PostgreSQL.
+        </p>
+    </div>
+    <span class="badge">{{ events_count }} последних событий</span>
+</div>
+
+<section class="panel admin-panel">
+    {% if events %}
+    <div class="event-list">
+        {% for event in events %}
+        <article class="event-card">
+            <div class="event-card__header">
+                <div class="event-card__title">
+                    <span class="badge">{{ event.action or "EVENT" }}</span>
+                    <strong>{{ event.table_name or "unknown_table" }}</strong>
+                </div>
+                <span class="muted-text">offset {{ event.offset }} · partition {{ event.partition }}</span>
+            </div>
+
+            <div class="event-card__meta">
+                <span>topic: {{ event.topic }}</span>
+                {% if event.subject %}
+                <span>subject: {{ event.subject }}</span>
+                {% endif %}
+                <span>logged: {{ event.created_at }}</span>
+            </div>
+
+            <pre class="event-payload">{{ event.payload }}</pre>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>События пока не сохранены. Создайте или измените запись в админке.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

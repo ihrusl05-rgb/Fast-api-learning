@@ -1,8 +1,10 @@
+from datetime import datetime
 from decimal import Decimal
-from app.database.database import Model
 
-from sqlalchemy import ForeignKey, Numeric
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database.database import Model
 
 
 class Category(Model):
@@ -44,3 +46,25 @@ class User(Model):
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True)
     image: Mapped[str | None] = mapped_column(nullable=True)
+
+
+class EventLog(Model):
+    __tablename__ = "event_logs"
+    __table_args__ = (
+        UniqueConstraint("topic", "partition", "offset", name="uq_event_logs_topic_partition_offset"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    topic: Mapped[str]
+    partition: Mapped[int]
+    offset: Mapped[int] = mapped_column(BigInteger)
+    message_key: Mapped[str | None] = mapped_column(nullable=True)
+    subject: Mapped[str | None] = mapped_column(nullable=True)
+    action: Mapped[str | None] = mapped_column(nullable=True)
+    table_name: Mapped[str | None] = mapped_column(nullable=True)
+    payload: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )

@@ -68,6 +68,28 @@ class StubUser:
         self.is_active = is_active
 
 
+class StubEventLog:
+    def __init__(
+        self,
+        topic="partner_changes",
+        partition=1,
+        offset=3,
+        action="INSERT",
+        table_name="products",
+        payload='{"action":"INSERT"}',
+        subject="partner_changes.partner_changes",
+        created_at="2026-05-30 22:45:00",
+    ):
+        self.topic = topic
+        self.partition = partition
+        self.offset = offset
+        self.action = action
+        self.table_name = table_name
+        self.payload = payload
+        self.subject = subject
+        self.created_at = created_at
+
+
 async def test_login_page_opens(client):
     response = await client.get("/login")
 
@@ -84,6 +106,13 @@ async def test_sales_redirects_if_user_not_logged_in(client):
 
 async def test_admin_redirects_if_user_not_logged_in(client):
     response = await client.get("/admin", follow_redirects=False)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+
+async def test_events_redirect_if_user_not_logged_in(client):
+    response = await client.get("/events", follow_redirects=False)
 
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
@@ -248,3 +277,33 @@ async def test_admin_category_create_redirects_and_saves_category(client, overri
     assert len(session.added) == 1
     assert session.added[0].slug == "food"
     assert session.added[0].is_active is True
+
+
+async def test_events_page_shows_saved_event(client, override_db):
+    user = StubUser(
+        username="event_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "event_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    event = StubEventLog()
+    override_db(
+        StubSession(
+            execute_results=[StubResult(value=user), StubResult(values=[event])]
+        )
+    )
+
+    response = await client.get("/events")
+
+    assert response.status_code == 200
+    assert "Лента событий изменений" in response.text
+    assert "products" in response.text
+    assert "partner_changes" in response.text

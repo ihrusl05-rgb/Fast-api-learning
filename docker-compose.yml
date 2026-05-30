@@ -2,6 +2,16 @@ services:
   db:
     image: postgres:16
     container_name: partner-postgres
+    command:
+      [
+        "postgres",
+        "-c",
+        "wal_level=logical",
+        "-c",
+        "max_replication_slots=10",
+        "-c",
+        "max_wal_senders=10",
+      ]
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-partner_db}
@@ -39,6 +49,73 @@ services:
       SESSION_SAME_SITE: ${SESSION_SAME_SITE}
       SESSION_HTTPS_ONLY: ${SESSION_HTTPS_ONLY}
       SQL_ECHO: ${SQL_ECHO}
+
+  kafka:
+    image: apache/kafka:4.3.0
+    hostname: kafka
+    container_name: partner-kafka
+    restart: unless-stopped
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://127.0.0.1:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: partner-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "false"
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  wal-listener:
+    image: ihippik/wal-listener:v2.10.0
+    container_name: partner-wal-listener
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    volumes:
+      - ./wal-listener/config.yml:/app/config.yml:ro
+    ports:
+      - "2112:2112"
+
+  event-consumer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: partner-event-consumer
+    command: ["python", "-m", "app.consumers.kafka_events"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/partner_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: partner_changes
+      KAFKA_GROUP_ID: partner-events-consumer
 
 volumes:
   postgres_data:

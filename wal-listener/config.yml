@@ -1,0 +1,39 @@
+listener:
+  slotName: partner_fastapi_slot
+  refreshConnection: 30s
+  heartbeatInterval: 10s
+  filter:
+    tables:
+      categories:
+        - insert
+        - update
+        - delete
+      products:
+        - insert
+        - update
+        - delete
+  topicsMap:
+    public_categories: partner_changes
+    public_products: partner_changes
+
+logger:
+  level: info
+  fmt: json
+
+database:
+  host: db
+  port: 5432
+  name: partner_db
+  user: postgres
+  password: postgres
+  debug: false
+  enableTLS: false
+
+publisher:
+  type: kafka
+  address: kafka:9092
+  topic: partner_changes
+  topicPrefix: ""
+
+monitoring:
+  promAddr: ":2112"

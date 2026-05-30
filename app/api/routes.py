@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.security import hash_password, verify_password
 from app.database.database import get_db
-from app.models.models import Category, Product, User
+from app.models.models import Category, EventLog, Product, User
 from app.schemas.schemas import CategoryUpsert, ProductUpsert, UserCreate
 
 router = APIRouter()
@@ -497,6 +497,30 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
             "username": user.username,
             "categories": categories_result.scalars().all(),
             "products": products_result.scalars().all(),
+        },
+    )
+
+
+@router.get("/events", response_class=HTMLResponse)
+async def events_page(request: Request, db: AsyncSession = Depends(get_db)):
+    user = await require_authenticated_user(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    events_result = await db.execute(
+        select(EventLog)
+        .order_by(EventLog.id.desc())
+        .limit(50)
+    )
+    events = list(events_result.scalars().all())
+
+    return render_template(
+        request,
+        "events.html",
+        {
+            "username": user.username,
+            "events": events,
+            "events_count": len(events),
         },
     )
 
