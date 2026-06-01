@@ -5,26 +5,32 @@
 <div class="page-header">
     <div>
         <span class="panel__eyebrow">Админка партнёров</span>
-        <h1>Управление разделами и карточками</h1>
+        <h1>Управление категориями и товарами</h1>
         <p class="sales-subtitle">
-            Здесь можно создавать и редактировать разделы и офферы. Эти изменения позже
+            Здесь можно создавать и редактировать категории и товары. Эти изменения позже
             будут источником событий для WAL и Kafka.
         </p>
     </div>
     <div class="hero__actions">
-        <a href="/admin/categories/new" class="btn">+ Раздел</a>
-        <a href="/admin/products/new" class="btn btn--ghost">+ Карточка</a>
+        <a href="/admin/categories/new" class="btn">+ Категория</a>
+        <a href="/admin/products/new" class="btn btn--ghost">+ Товар</a>
     </div>
 </div>
+
+{% if message %}
+<section class="panel admin-notice-panel">
+    <div class="alert alert--error">{{ message }}</div>
+</section>
+{% endif %}
 
 <div class="admin-layout">
     <section class="panel admin-panel">
         <div class="panel__header admin-panel__header">
             <div>
-                <span class="panel__eyebrow">Разделы</span>
+                <span class="panel__eyebrow">Категории</span>
                 <h2>{{ categories|length }} всего</h2>
             </div>
-            <a href="/admin/categories/new" class="btn btn--ghost">Создать раздел</a>
+            <a href="/admin/categories/new" class="btn btn--ghost">Создать категорию</a>
         </div>
 
         {% if categories %}
@@ -47,7 +53,16 @@
                         </span>
                     </div>
                 </div>
-                <a href="/admin/categories/{{ category.id }}/edit" class="btn btn--ghost">Редактировать</a>
+                <div class="admin-item__actions">
+                    <a href="/admin/categories/{{ category.id }}/edit" class="btn btn--ghost">Редактировать</a>
+                    <form
+                        action="/admin/categories/{{ category.id }}/delete"
+                        method="post"
+                        onsubmit="return confirm('Удалить раздел {{ category.name }}?');"
+                    >
+                        <button type="submit" class="btn btn--danger">Удалить</button>
+                    </form>
+                </div>
             </article>
             {% endfor %}
         </div>
@@ -88,7 +103,16 @@
                         </span>
                     </div>
                 </div>
-                <a href="/admin/products/{{ product.id }}/edit" class="btn btn--ghost">Редактировать</a>
+                <div class="admin-item__actions">
+                    <a href="/admin/products/{{ product.id }}/edit" class="btn btn--ghost">Редактировать</a>
+                    <form
+                        action="/admin/products/{{ product.id }}/delete"
+                        method="post"
+                        onsubmit="return confirm('Удалить карточку {{ product.name }}?');"
+                    >
+                        <button type="submit" class="btn btn--danger">Удалить</button>
+                    </form>
+                </div>
             </article>
             {% endfor %}
         </div>

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Офферы{% endblock %}
+{% block title %}Товары{% endblock %}
 
 {% block content %}
 <div class="page-header sales-header">
     <div>
-        <span class="panel__eyebrow">Каталог предложений</span>
-        <h1>Витрина партнёрских офферов</h1>
+        <span class="panel__eyebrow">Каталог товаров</span>
+        <h1>Витрина партнёрских товаров</h1>
         <p class="sales-subtitle">
             Поиск по названию, описанию и id. Пагинация и фильтрация работают на сервере.
         </p>
@@ -51,7 +51,7 @@
         <div class="panel sales-summary">
             <div>
                 <span class="panel__eyebrow">Результат</span>
-                <h2>Найдено {{ total_products }} офферов</h2>
+                <h2>Найдено {{ total_products }} товаров</h2>
             </div>
             <div class="sales-summary__meta">
                 {% if search_query %}

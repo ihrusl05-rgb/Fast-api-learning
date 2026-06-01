@@ -11,7 +11,14 @@ from app.models.models import EventLog
 
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "partner_changes")
+KAFKA_TOPICS = [
+    topic.strip()
+    for topic in os.getenv(
+        "KAFKA_TOPICS",
+        os.getenv("KAFKA_TOPIC", "partner_changes,partner_changes.partner_changes"),
+    ).split(",")
+    if topic.strip()
+]
 KAFKA_GROUP_ID = os.getenv("KAFKA_GROUP_ID", "partner-events-consumer")
 
 
@@ -67,7 +74,7 @@ async def persist_event(message) -> None:
 
 async def consume() -> None:
     consumer = AIOKafkaConsumer(
-        KAFKA_TOPIC,
+        *KAFKA_TOPICS,
         bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
         group_id=KAFKA_GROUP_ID,
         auto_offset_reset="earliest",

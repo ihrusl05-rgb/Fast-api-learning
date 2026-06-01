@@ -689,6 +689,7 @@ select {
 .admin-list,
 .admin-item__main,
 .admin-item__meta,
+.admin-item__actions,
 .form-actions,
 .event-list,
 .event-card__meta {
@@ -757,8 +758,22 @@ select {
     align-items: center;
 }
 
+.admin-item__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.admin-item__actions form {
+    margin: 0;
+}
+
 .admin-form-panel {
     max-width: 860px;
+}
+
+.admin-notice-panel {
+    margin-bottom: 22px;
 }
 
 .form-grid {
@@ -787,6 +802,17 @@ select {
     gap: 12px;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.btn--danger {
+    background: rgba(168, 43, 43, 0.12);
+    color: #8b2222;
+    border: 1px solid rgba(168, 43, 43, 0.18);
+}
+
+.btn--danger:hover {
+    background: rgba(168, 43, 43, 0.18);
+    color: #6f1717;
 }
 
 .event-card {
@@ -870,6 +896,8 @@ select {
         grid-template-columns: 1fr;
     }
 
+    .admin-panel__header,
+    .admin-item__actions,
     .event-card__header {
         flex-direction: column;
         align-items: flex-start;

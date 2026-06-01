@@ -137,6 +137,31 @@ def build_product_form_context(
     }
 
 
+async def build_admin_dashboard_context(
+    db: AsyncSession,
+    *,
+    username: str,
+    message: str | None = None,
+) -> dict:
+    categories_result = await db.execute(
+        select(Category)
+        .options(selectinload(Category.products))
+        .order_by(Category.name.asc())
+    )
+    products_result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category))
+        .order_by(Product.id.desc())
+    )
+
+    return {
+        "username": username,
+        "categories": categories_result.scalars().all(),
+        "products": products_result.scalars().all(),
+        "message": message,
+    }
+
+
 def group_products_by_category(
     categories: list[Category],
     products: list[Product],
@@ -479,25 +504,10 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     if isinstance(user, RedirectResponse):
         return user
 
-    categories_result = await db.execute(
-        select(Category)
-        .options(selectinload(Category.products))
-        .order_by(Category.name.asc())
-    )
-    products_result = await db.execute(
-        select(Product)
-        .options(selectinload(Product.category))
-        .order_by(Product.id.desc())
-    )
-
     return render_template(
         request,
         "admin.html",
-        {
-            "username": user.username,
-            "categories": categories_result.scalars().all(),
-            "products": products_result.scalars().all(),
-        },
+        await build_admin_dashboard_context(db, username=user.username),
     )
 
 
@@ -560,6 +570,7 @@ async def admin_category_create(
     user = await require_authenticated_user(request, db)
     if isinstance(user, RedirectResponse):
         return user
+    username = user.username
 
     raw_form_data = {
         "name": name,
@@ -576,7 +587,7 @@ async def admin_category_create(
             request,
             "admin_category_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Новый раздел",
                 "submit_label": "Создать раздел",
                 "form_action": "/admin/categories/new",
@@ -598,7 +609,7 @@ async def admin_category_create(
             request,
             "admin_category_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Новый раздел",
                 "submit_label": "Создать раздел",
                 "form_action": "/admin/categories/new",
@@ -653,8 +664,10 @@ async def admin_category_edit(
     user = await require_authenticated_user(request, db)
     if isinstance(user, RedirectResponse):
         return user
+    username = user.username
 
     category = await fetch_category_or_404(db, category_id)
+    form_action = f"/admin/categories/{category.id}/edit"
     raw_form_data = {
         "name": name,
         "description": description,
@@ -670,10 +683,10 @@ async def admin_category_edit(
             request,
             "admin_category_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Редактирование раздела",
                 "submit_label": "Сохранить раздел",
-                "form_action": f"/admin/categories/{category.id}/edit",
+                "form_action": form_action,
                 "category": category,
                 **build_category_form_context(
                     format_validation_error(exc, CATEGORY_ERROR_MESSAGES),
@@ -694,11 +707,10 @@ async def admin_category_edit(
             request,
             "admin_category_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Редактирование раздела",
                 "submit_label": "Сохранить раздел",
-                "form_action": f"/admin/categories/{category.id}/edit",
-                "category": category,
+                "form_action": form_action,
                 **build_category_form_context(
                     "Раздел с таким slug уже существует.",
                     form_data=raw_form_data,
@@ -707,6 +719,34 @@ async def admin_category_edit(
             status_code=400,
         )
 
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@router.post("/admin/categories/{category_id}/delete", response_class=HTMLResponse)
+async def admin_category_delete(
+    request: Request,
+    category_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    user = await require_authenticated_user(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    category = await fetch_category_or_404(db, category_id)
+    if category.products:
+        return render_template(
+            request,
+            "admin.html",
+            await build_admin_dashboard_context(
+                db,
+                username=user.username,
+                message="Нельзя удалить раздел, пока в нём есть карточки.",
+            ),
+            status_code=400,
+        )
+
+    await db.delete(category)
+    await db.commit()
     return RedirectResponse(url="/admin", status_code=303)
 
 
@@ -753,6 +793,7 @@ async def admin_product_create(
     user = await require_authenticated_user(request, db)
     if isinstance(user, RedirectResponse):
         return user
+    username = user.username
 
     categories = await fetch_all_categories(db)
     raw_form_data = {
@@ -770,7 +811,7 @@ async def admin_product_create(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Новая карточка",
                 "submit_label": "Создать карточку",
                 "form_action": "/admin/products/new",
@@ -790,7 +831,7 @@ async def admin_product_create(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Новая карточка",
                 "submit_label": "Создать карточку",
                 "form_action": "/admin/products/new",
@@ -809,7 +850,7 @@ async def admin_product_create(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Новая карточка",
                 "submit_label": "Создать карточку",
                 "form_action": "/admin/products/new",
@@ -832,7 +873,7 @@ async def admin_product_create(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Новая карточка",
                 "submit_label": "Создать карточку",
                 "form_action": "/admin/products/new",
@@ -891,9 +932,11 @@ async def admin_product_edit(
     user = await require_authenticated_user(request, db)
     if isinstance(user, RedirectResponse):
         return user
+    username = user.username
 
     product = await fetch_product_or_404(db, product_id)
     categories = await fetch_all_categories(db)
+    form_action = f"/admin/products/{product.id}/edit"
     raw_form_data = {
         "category_id": category_id,
         "name": name,
@@ -911,10 +954,10 @@ async def admin_product_edit(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Редактирование карточки",
                 "submit_label": "Сохранить карточку",
-                "form_action": f"/admin/products/{product.id}/edit",
+                "form_action": form_action,
                 "product": product,
                 **build_product_form_context(
                     categories,
@@ -931,10 +974,10 @@ async def admin_product_edit(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Редактирование карточки",
                 "submit_label": "Сохранить карточку",
-                "form_action": f"/admin/products/{product.id}/edit",
+                "form_action": form_action,
                 "product": product,
                 **build_product_form_context(
                     categories,
@@ -956,11 +999,10 @@ async def admin_product_edit(
             request,
             "admin_product_form.html",
             {
-                "username": user.username,
+                "username": username,
                 "page_title": "Редактирование карточки",
                 "submit_label": "Сохранить карточку",
-                "form_action": f"/admin/products/{product.id}/edit",
-                "product": product,
+                "form_action": form_action,
                 **build_product_form_context(
                     categories,
                     "Карточка с таким slug уже существует.",
@@ -970,4 +1012,20 @@ async def admin_product_edit(
             status_code=400,
         )
 
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@router.post("/admin/products/{product_id}/delete", response_class=HTMLResponse)
+async def admin_product_delete(
+    request: Request,
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    user = await require_authenticated_user(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    product = await fetch_product_or_404(db, product_id)
+    await db.delete(product)
+    await db.commit()
     return RedirectResponse(url="/admin", status_code=303)

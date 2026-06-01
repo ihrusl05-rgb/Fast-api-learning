@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.core.security import hash_password
 
@@ -31,6 +32,7 @@ class StubSession:
         self.execute_results = list(execute_results or [])
         self.scalar_results = list(scalar_results or [])
         self.added = []
+        self.deleted = []
         self.committed = False
         self.rolled_back = False
 
@@ -47,11 +49,20 @@ class StubSession:
     def add(self, value):
         self.added.append(value)
 
+    async def delete(self, value):
+        self.deleted.append(value)
+
     async def commit(self):
         self.committed = True
 
     async def rollback(self):
         self.rolled_back = True
+
+
+class FailingCommitSession(StubSession):
+    async def commit(self):
+        self.committed = True
+        raise IntegrityError("insert into categories", {}, Exception("duplicate key"))
 
 
 class StubUser:
@@ -66,6 +77,48 @@ class StubUser:
         self.hashed_password = hashed_password
         self.email = email
         self.is_active = is_active
+
+
+class StubCategory:
+    def __init__(
+        self,
+        category_id=1,
+        name="Еда",
+        slug="food",
+        icon="🍔",
+        description="Скидки",
+        is_active=True,
+        products=None,
+    ):
+        self.id = category_id
+        self.name = name
+        self.slug = slug
+        self.icon = icon
+        self.description = description
+        self.is_active = is_active
+        self.products = products or []
+
+
+class StubProduct:
+    def __init__(
+        self,
+        product_id=1,
+        category_id=1,
+        name="Бургер",
+        slug="burger",
+        price="100.00",
+        description="Вкусно",
+        is_active=True,
+        category=None,
+    ):
+        self.id = product_id
+        self.category_id = category_id
+        self.name = name
+        self.slug = slug
+        self.price = price
+        self.description = description
+        self.is_active = is_active
+        self.category = category or StubCategory(category_id=category_id)
 
 
 class StubEventLog:
@@ -277,6 +330,107 @@ async def test_admin_category_create_redirects_and_saves_category(client, overri
     assert len(session.added) == 1
     assert session.added[0].slug == "food"
     assert session.added[0].is_active is True
+
+
+async def test_admin_category_create_duplicate_slug_returns_validation_error(client, override_db):
+    user = StubUser(
+        username="admin_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "admin_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    session = FailingCommitSession(execute_results=[StubResult(value=user)])
+    override_db(session)
+
+    response = await client.post(
+        "/admin/categories/new",
+        data={
+            "name": "Еда",
+            "description": "Скидки и промо",
+            "icon": "🍔",
+            "slug": "food",
+            "is_active": "on",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Раздел с таким slug уже существует." in response.text
+    assert session.rolled_back is True
+
+
+async def test_admin_product_delete_redirects_and_deletes_product(client, override_db):
+    user = StubUser(
+        username="admin_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "admin_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    product = StubProduct(product_id=10)
+    session = StubSession(
+        execute_results=[StubResult(value=user), StubResult(value=product)]
+    )
+    override_db(session)
+
+    response = await client.post(
+        "/admin/products/10/delete",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/admin"
+    assert session.committed is True
+    assert session.deleted == [product]
+
+
+async def test_admin_category_delete_with_products_returns_error(client, override_db):
+    user = StubUser(
+        username="admin_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "admin_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    category = StubCategory(category_id=2, products=[StubProduct(product_id=11)])
+    dashboard_category = StubCategory(category_id=2, products=[StubProduct(product_id=11)])
+    dashboard_product = StubProduct(product_id=11, category=dashboard_category)
+    session = StubSession(
+        execute_results=[
+            StubResult(value=user),
+            StubResult(value=category),
+            StubResult(values=[dashboard_category]),
+            StubResult(values=[dashboard_product]),
+        ]
+    )
+    override_db(session)
+
+    response = await client.post("/admin/categories/2/delete")
+
+    assert response.status_code == 400
+    assert "Нельзя удалить раздел, пока в нём есть карточки." in response.text
+    assert session.deleted == []
 
 
 async def test_events_page_shows_saved_event(client, override_db):
