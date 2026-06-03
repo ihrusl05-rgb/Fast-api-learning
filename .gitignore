@@ -11,9 +11,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
-THEORY.md
-PROJECT_GUIDE.md
-INTERVIEW_GUIDE.md
 
 # Tool caches
 .pytest_cache/
@@ -35,8 +32,6 @@ dist/
 # IDE files
 .idea/
 .vscode/
-.agents/
-.codex/
 
 # OS files
 .DS_Store
