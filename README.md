@@ -1,25 +1,21 @@
 # Partner System
 
-Демо-проект партнёрской системы на `FastAPI` с серверным рендерингом через `Jinja2`, асинхронным доступом к БД через `SQLAlchemy Async` и миграциями `Alembic`.
+Учебный проект партнёрской системы на `FastAPI`.
 
-Проект показывает базовый пользовательский поток:
-- регистрация пользователя;
-- авторизация через сессию;
-- дашборд после входа;
-- просмотр каталога партнёрских товаров;
-- фильтрация по категориям;
-- поиск по названию, описанию и `id`;
-- постраничная навигация;
-- детальная страница предложения.
+В приложении есть регистрация, вход через сессию, каталог предложений,
+простая админка для разделов и карточек, а также страница с событиями из Kafka.
+HTML рендерится через `Jinja2`, данные хранятся в PostgreSQL, миграции ведутся через
+`Alembic`.
 
 ## Стек
 
 - `FastAPI`
 - `Jinja2`
-- `SQLAlchemy 2.0 Async`
+- `SQLAlchemy 2.0`
 - `Alembic`
 - `Pydantic v2`
-- `SQLite` по умолчанию
+- `PostgreSQL`
+- `Kafka`
 - `pytest`
 
 ## Структура проекта
@@ -27,69 +23,88 @@
 ```text
 app/
   api/
-    routes.py           # HTTP-роуты и orchestration-логика
+    routes.py          
+    public.py           
+    admin.py            
+    admin_categories.py 
+    admin_products.py   
+    common.py           
+  consumers/
+    kafka_events.py    
   core/
-    security.py         # Хеширование и проверка пароля
+    security.py         
   database/
-    database.py         # Engine, session factory, dependency
-    seed.py             # Заполнение демо-данными
+    database.py         
+    seed.py             
   models/
-    models.py           # SQLAlchemy модели
+    models.py           
   schemas/
-    schemas.py          # Pydantic-схемы и валидация
+    schemas.py          
   static/
-    css/style.css       # Стили интерфейса
+    css/style.css
   templates/
-    *.html              # Jinja2 шаблоны
+    *.html
 alembic/
-  versions/             # Миграции
+  versions/
 tests/
-  conftest.py
-  test_routes.py
-main.py                 # Инициализация FastAPI приложения
-config.py               # Настройки приложения
+main.py
+config.py
+docker-compose.yml
 ```
 
-## Быстрый запуск
+## Запуск через Docker
 
-1. Создать виртуальное окружение и установить зависимости:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-2. Создать `.env` на основе примера:
+1. Создать `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
+2. Запустить контейнеры:
+
+```bash
+docker compose up --build
+```
+
 3. Применить миграции:
 
 ```bash
+docker compose exec app alembic upgrade head
+```
+
+4. Заполнить базу демо-данными:
+
+```bash
+docker compose exec app python -m app.database.seed
+```
+
+Приложение будет доступно на `http://127.0.0.1:8000`.
+Kafka UI будет доступен на `http://127.0.0.1:8080`.
+
+## Локальный запуск без Docker
+
+Нужна запущенная PostgreSQL-база. Для базы из `docker-compose.yml` с хоста
+используется порт `5433`.
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 alembic upgrade head
-```
-
-4. Заполнить БД демо-данными:
-
-```bash
 python -m app.database.seed
-```
-
-5. Запустить приложение:
-
-```bash
 uvicorn main:app --reload
 ```
 
 ## Переменные окружения
 
-Пример в `.env.example`:
+Основные переменные находятся в `.env.example`:
 
 ```env
-DATABASE_URL=spostgresql+asyncpg://user:password@localhost:5432/partner_db
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/partner_db
+POSTGRES_DB=partner_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 SECRET_KEY=change-me
 SESSION_COOKIE_NAME=partner_session
 SESSION_MAX_AGE=28800
@@ -98,53 +113,26 @@ SESSION_HTTPS_ONLY=false
 SQL_ECHO=false
 ```
 
-## Основные маршруты
+## Основные страницы
 
-- `GET /login` — страница входа
-- `POST /login` — авторизация
-- `GET /registration` — страница регистрации
-- `POST /registration` — создание пользователя
-- `GET /` — пользовательский дашборд
-- `GET /sales` — каталог товаров
-- `GET /sales/{product_slug}` — детальная страница оффера
-- `GET /logout` — очистка сессии
-
-## Что улучшено в текущей версии
-
-- добавлен аккуратный конфиг для сессий и БД;
-- убран deprecated-вызов `TemplateResponse`;
-- регистрация теперь нормализует `username` и `email`;
-- сообщения об ошибках валидации централизованы;
-- при ошибке формы сохраняются введённые пользователем значения;
-- на главной странице появился дашборд с метриками;
-- в каталоге есть фильтрация, поиск, пагинация и деталка оффера;
-- сиды исправлены и расширены, чтобы демонстрировать пагинацию;
-- тесты покрывают ключевые сценарии логина и регистрации.
+- `GET /login` - вход
+- `GET /registration` - регистрация
+- `GET /` - главная после входа
+- `GET /sales` - каталог предложений
+- `GET /sales/{product_slug}` - детальная страница предложения
+- `GET /admin` - админка
+- `GET /events` - последние события из Kafka
+- `GET /logout` - выход
 
 ## Тесты
-
-Запуск тестов:
 
 ```bash
 pytest -q
 ```
 
-Покрытие:
+С покрытием:
 
 ```bash
 coverage run -m pytest
 coverage report -m
 ```
-
-## Дальнейшие шаги
-
-Если развивать проект дальше до более приближённого к продакшену состояния, можно добавить:
-
-- роли пользователя (`admin`, `partner`, `client`);
-- CRUD для категорий и товаров через админку;
-- отдельный сервисный слой и репозитории;
-- flash-сообщения и CSRF-защиту для форм;
-- Docker и `docker-compose`;
-- PostgreSQL как основную БД;
-- CI с автозапуском тестов и линтеров;
-- API-слой помимо HTML-интерфейса.

@@ -114,7 +114,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/partner_db
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      KAFKA_TOPICS: partner_changes,partner_changes.partner_changes
+      KAFKA_TOPICS: partner_changes
       KAFKA_GROUP_ID: partner-events-consumer
 
 volumes:
