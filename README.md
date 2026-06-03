@@ -101,7 +101,7 @@ uvicorn main:app --reload
 Основные переменные находятся в `.env.example`:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/partner_db
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/partner_db
 POSTGRES_DB=partner_db
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres

@@ -3,8 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     APP_TITLE: str = "Partner System"
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/partner_db"
-    SECRET_KEY: str = "dev-secret-key-change-me"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5433/partner_db"
+    SECRET_KEY: str = "change-me"
     SESSION_COOKIE_NAME: str = "partner_session"
     SESSION_MAX_AGE: int = 60 * 60 * 8
     SESSION_SAME_SITE: str = "lax"
