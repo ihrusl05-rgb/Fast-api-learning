@@ -135,4 +135,7 @@ pytest -q
 ```bash
 coverage run -m pytest
 coverage report -m
+
+Покрытие 83%
+
 ```
