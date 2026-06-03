@@ -24,7 +24,7 @@ HTML рендерится через `Jinja2`, данные хранятся в 
 app/
   api/
     routes.py          
-    public.pyУчебный-проект для партнёрской программы           
+    public.py         
     admin.py            
     admin_categories.py 
     admin_products.py   
