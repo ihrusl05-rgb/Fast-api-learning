@@ -3,7 +3,6 @@ import json
 import os
 from contextlib import suppress
 
-from aiokafka import AIOKafkaConsumer
 from sqlalchemy import select
 
 from app.database.database import engine, new_session
@@ -73,6 +72,8 @@ async def persist_event(message) -> None:
 
 
 async def consume() -> None:
+    from aiokafka import AIOKafkaConsumer
+
     consumer = AIOKafkaConsumer(
         *KAFKA_TOPICS,
         bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,

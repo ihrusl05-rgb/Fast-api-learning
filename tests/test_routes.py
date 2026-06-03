@@ -1,7 +1,8 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.core.security import hash_password
+from app.consumers.kafka_events import decode_message_key, parse_payload
+from app.core.security import hash_password, verify_password
 
 
 pytestmark = pytest.mark.anyio
@@ -201,6 +202,23 @@ async def test_login_with_correct_data_redirects_to_index(client, override_db):
     assert "partner_session=" in response.headers["set-cookie"]
 
 
+async def test_login_with_inactive_user_returns_error(client, override_db):
+    user = StubUser(
+        username="blocked_user",
+        hashed_password=hash_password("strong_password"),
+        is_active=False,
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    response = await client.post(
+        "/login",
+        data={"username": "blocked_user", "password": "strong_password"},
+    )
+
+    assert response.status_code == 400
+    assert "Неверное имя пользователя или пароль" in response.text
+
+
 @pytest.mark.parametrize(
     ("payload", "expected_message"),
     [
@@ -287,11 +305,92 @@ async def test_registration_duplicate_username_returns_error(client, override_db
     assert "Пользователь с таким username уже существует" in response.text
 
 
+async def test_registration_duplicate_email_returns_error(client, override_db):
+    existing_user = StubUser(username="other_user", email="taken@example.com")
+    override_db(StubSession(execute_results=[StubResult(values=[existing_user])]))
+
+    response = await client.post(
+        "/registration",
+        data={
+            "username": "new_user",
+            "email": "taken@example.com",
+            "password": "123456",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Пользователь с таким email уже существует" in response.text
+
+
 async def test_logout_redirects_user(client):
     response = await client.get("/logout", follow_redirects=False)
 
     assert response.status_code == 303
     assert response.headers["location"] == "/"
+
+
+async def test_sales_page_shows_products_for_logged_user(client, override_db):
+    user = StubUser(
+        username="sales_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "sales_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    category = StubCategory(name="Еда", slug="food")
+    product = StubProduct(name="Бургер", slug="burger", category=category)
+    session = StubSession(
+        execute_results=[
+            StubResult(value=user),
+            StubResult(values=[category]),
+            StubResult(values=[product]),
+        ],
+        scalar_results=[1],
+    )
+    override_db(session)
+
+    response = await client.get("/sales")
+
+    assert response.status_code == 200
+    assert "Витрина партнёрских товаров" in response.text
+    assert "Бургер" in response.text
+    assert "Еда" in response.text
+
+
+async def test_offer_detail_returns_404_for_unknown_slug(client, override_db):
+    user = StubUser(
+        username="detail_user",
+        hashed_password=hash_password("strong_password"),
+    )
+    override_db(StubSession(execute_results=[StubResult(value=user)]))
+
+    login_response = await client.post(
+        "/login",
+        data={"username": "detail_user", "password": "strong_password"},
+        follow_redirects=False,
+    )
+
+    assert login_response.status_code == 303
+
+    override_db(
+        StubSession(
+            execute_results=[
+                StubResult(value=user),
+                StubResult(),
+            ]
+        )
+    )
+
+    response = await client.get("/sales/unknown-offer")
+
+    assert response.status_code == 404
 
 
 async def test_admin_category_create_redirects_and_saves_category(client, override_db):
@@ -461,3 +560,36 @@ async def test_events_page_shows_saved_event(client, override_db):
     assert "Лента событий изменений" in response.text
     assert "products" in response.text
     assert "partner_changes" in response.text
+
+
+def test_password_hash_can_be_verified():
+    hashed_password = hash_password("strong_password")
+
+    assert hashed_password != "strong_password"
+    assert verify_password("strong_password", hashed_password) is True
+    assert verify_password("wrong_password", hashed_password) is False
+
+
+def test_decode_message_key():
+    assert decode_message_key(None) is None
+    assert decode_message_key(b"partner-key") == "partner-key"
+
+
+def test_parse_payload_from_json():
+    payload, subject, action, table_name = parse_payload(
+        b'{"subject":"partner_changes.products","action":"INSERT","table":"products"}'
+    )
+
+    assert subject == "partner_changes.products"
+    assert action == "INSERT"
+    assert table_name == "products"
+    assert '"action": "INSERT"' in payload
+
+
+def test_parse_payload_keeps_plain_text():
+    payload, subject, action, table_name = parse_payload(b"not-json")
+
+    assert payload == "not-json"
+    assert subject is None
+    assert action is None
+    assert table_name is None

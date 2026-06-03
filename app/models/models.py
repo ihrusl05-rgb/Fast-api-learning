@@ -9,6 +9,7 @@ from app.database.database import Model
 
 class Category(Model):
     __tablename__ = "categories"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     description: Mapped[str | None] = mapped_column(nullable=True)
@@ -16,9 +17,6 @@ class Category(Model):
     icon: Mapped[str] = mapped_column(default="📦")
     slug: Mapped[str] = mapped_column(unique=True, nullable=False)
     products: Mapped[list["Product"]] = relationship(back_populates="category")
-
-
-
 
 
 class Product(Model):
@@ -35,8 +33,6 @@ class Product(Model):
     category: Mapped["Category"] = relationship(back_populates="products")
 
 
-
-
 class User(Model):
     __tablename__ = "users"
 
@@ -51,7 +47,12 @@ class User(Model):
 class EventLog(Model):
     __tablename__ = "event_logs"
     __table_args__ = (
-        UniqueConstraint("topic", "partition", "offset", name="uq_event_logs_topic_partition_offset"),
+        UniqueConstraint(
+            "topic",
+            "partition",
+            "offset",
+            name="uq_event_logs_topic_partition_offset",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
