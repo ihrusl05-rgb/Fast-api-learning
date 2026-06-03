@@ -1,4 +1,4 @@
-# Partner System
+# Партнерская система
 
 Учебный проект партнёрской системы на `FastAPI`.
 
@@ -24,7 +24,7 @@ HTML рендерится через `Jinja2`, данные хранятся в 
 app/
   api/
     routes.py          
-    public.py           
+    public.pyУчебный-проект для партнёрской программы           
     admin.py            
     admin_categories.py 
     admin_products.py   
